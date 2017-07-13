@@ -1,0 +1,9 @@
+#!/bin/bash
+
+/bin/echo "waiting for 10s..." >> /home/pi/logs/startup.log
+sleep 10
+
+echo `whoami`
+echo "before invoking" >> /home/pi/logs/startup.log
+python -u /home/pi/buckshot/water.py >> /home/pi/logs/water.log
+echo "water.py shutdown" >> /home/pi/logs/startup.log
