@@ -11,6 +11,9 @@ MINUTES_BETWEEN_SAMPLES = 30
 # check the moisture levels, decide if water should be on or off, then wait this
 # many minutes before checking again
 
+WATER_ON_TIME_MINUTES = 5
+# when it's determined that the water should be on, run it for this many minutes
+
 
 bus = smbus.SMBus(1)
 
@@ -92,7 +95,6 @@ TRIPS = [0.3, 1.1, 0.9]
 print nowstr(), "Water Controller started"
 
 # Main (and infinite) loop
-waterIsOn = 0
 while True:
     relayOnCount = 0
     for adci in range(0, len(ADCS)):
@@ -103,17 +105,15 @@ while True:
         #print ADC_FUNCS[adci], "voltage:", v
         if (v < TRIPS[adci]):
             relayOnCount += 1
-            if (waterIsOn == 0):
-                print nowstr(), "Turning on water because of", ADC_FUNCS[adci]
+            print nowstr(), "Turning on water because of", ADC_FUNCS[adci]
     if (relayOnCount > 0):
         GPIO.setup(RelayPin, GPIO.OUT)
         GPIO.output(RelayPin, GPIO.LOW)
-        waterIsOn = 1
-    else:
-        if (waterIsOn == 1):
-            print nowstr(),"Turning off water because all sensors show dry"
+        time.sleep(WATER_ON_TIME_MINUTES*60.0)
         GPIO.setup(RelayPin, GPIO.IN)
-        waterIsOn = 0
+        print nowstr(),"Turning off water"
+    else:
+        GPIO.setup(RelayPin, GPIO.IN)
     time.sleep(MINUTES_BETWEEN_SAMPLES*60.0)
 
 
