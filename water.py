@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Basic example of using Python-SMBus and a ADS1115
+# Basic example of using Python-SMBus, ADS1115 and Sainsmart 5V Relay via GPIO
 
 import smbus as smbus
 import RPi.GPIO as GPIO
@@ -14,6 +14,10 @@ MINUTES_BETWEEN_SAMPLES = 30
 WATER_ON_TIME_MINUTES = 5
 # when it's determined that the water should be on, run it for this many minutes
 
+GROVE_min_volts = 0.0  # when sensor is out of the soil and dry
+GROVE_max_volts = 3.3  # when sensor area is completely submerged in water
+VH400_min_volts = 0.05 # when sensor is out of the soil and dry
+VH400_max_volts = 2.8  # when sensor area is completely submerged in water
 
 bus = smbus.SMBus(1)
 
@@ -70,7 +74,7 @@ def sample2Voltage(sample):
 
 def nowstr():
     fmt = 'INFO: %Y-%b-%d %H:%M:%S :'
-    return datetime.datetime.today().strftime('INFO: %Y-%b-%d %H:%M:%S :')
+    return datetime.datetime.today().strftime(fmt)
 
 
 # Pin Definitons:
@@ -82,10 +86,9 @@ GPIO.setup(RelayPin, GPIO.IN)
 # Note, I'm going to use the pin as an input when I don't want the Relay to
 # trip, but then switch to output and pull it low when I want to trip the
 # relay (i.e. have it closed)
-#
+
 # For now, I'm going to turn on the relay whenever any of the 3 conditions
 # are met
-
 
 # ADC sample loop definitions
 ADC_FUNCS = ["VH400", "GROVE", "DIVIDER"]
@@ -115,6 +118,4 @@ while True:
     else:
         GPIO.setup(RelayPin, GPIO.IN)
     time.sleep(MINUTES_BETWEEN_SAMPLES*60.0)
-
-
 
