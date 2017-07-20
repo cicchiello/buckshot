@@ -78,21 +78,21 @@ def nowstr():
 
 
 # Pin Definitons:
-RelayPin = 18 # Broadcom pin 18 (P1 pin 12)
+Relay1Pin = 17 # Broadcom pin 17 (P1 pin 11)
+Relay2Pin = 18 # Broadcom pin 18 (P1 pin 12)
 
 # Pin Setup:
 GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
-GPIO.setup(RelayPin, GPIO.IN)
-# Note, I'm going to use the pin as an input when I don't want the Relay to
-# trip, but then switch to output and pull it low when I want to trip the
+GPIO.setup(Relay1Pin, GPIO.IN)
+GPIO.setup(Relay2Pin, GPIO.IN)
+# Note, I'm going to use the pins as inputs when I don't want the Relays to
+# trip, but then switch to output and pull low when I want to trip the
 # relay (i.e. have it closed)
-
-# For now, I'm going to turn on the relay whenever any of the 3 conditions
-# are met
 
 # ADC sample loop definitions
 ADC_FUNCS = ["VH400", "GROVE", "DIVIDER"]
 ADCS = [MUX_ADC_IN3, MUX_ADC_IN2, MUX_ADC_IN1] #note, not using ADC0
+RELAYS = [Relay1Pin, Relay2Pin, 0]
 TRIPS = [0.3, 1.1, 0.9]
 
 print nowstr(), "Water Controller started"
@@ -106,16 +106,15 @@ while True:
         sample = readSample(ADCS[adci])
         v = sample2Voltage(sample)
         #print ADC_FUNCS[adci], "voltage:", v
-        if (v < TRIPS[adci]):
+        if ((v < TRIPS[adci]) and (RELAYS[adci] > 0)):
             relayOnCount += 1
             print nowstr(), "Turning on water because of", ADC_FUNCS[adci]
+            GPIO.setup(RELAYS[adci], GPIO.OUT)
+            GPIO.output(RELAYS[adci], GPIO.LOW)
     if (relayOnCount > 0):
-        GPIO.setup(RelayPin, GPIO.OUT)
-        GPIO.output(RelayPin, GPIO.LOW)
         time.sleep(WATER_ON_TIME_MINUTES*60.0)
-        GPIO.setup(RelayPin, GPIO.IN)
         print nowstr(),"Turning off water"
-    else:
-        GPIO.setup(RelayPin, GPIO.IN)
+        for i in range(0, len(RELAYS)):
+            GPIO.setup(RELAYS[i], GPIO.IN)
     time.sleep(MINUTES_BETWEEN_SAMPLES*60.0)
 
